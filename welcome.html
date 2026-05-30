@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Welcome to Oriella</title>
+  <meta name="description" content="Connect with Oriella Laundry & Care." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,31 +14,153 @@
   <link rel="stylesheet" href="styles.css" />
 
   <style>
-    .welcome-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      margin-top: 48px;
+    body {
+      background: #fbfaf6;
     }
 
-    .welcome-footer {
-      margin-top: 60px;
+    .welcome-page {
+      min-height: calc(100vh - 88px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 44px 20px 34px;
+    }
+
+    .welcome-wrap {
+      width: 100%;
+      max-width: 900px;
       text-align: center;
     }
 
-    .welcome-footer p {
-      margin: 8px 0;
+    .welcome-logo {
+      width: min(360px, 82vw);
+      display: block;
+      margin: 0 auto 22px;
     }
 
-    .welcome-icon {
-      font-size: 28px;
-      margin-bottom: 10px;
+    .welcome-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(48px, 7vw, 76px);
+      line-height: 0.95;
+      font-weight: 500;
+      color: #36573a;
+      margin: 0 0 8px;
+    }
+
+    .welcome-subtitle {
+      font-size: 15px;
+      color: #6b675f;
+      margin: 0 0 8px;
+    }
+
+    .welcome-text {
+      font-size: 15px;
+      color: #4f5f57;
+      margin: 0 0 34px;
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 0 auto 34px;
+      max-width: 760px;
+    }
+
+    .welcome-link {
+      text-decoration: none;
+      color: inherit;
       display: block;
     }
 
-    @media (max-width: 768px) {
+    .welcome-card {
+      height: 100%;
+      text-align: left;
+      padding: 28px;
+    }
+
+    .welcome-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .welcome-card p {
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    .de-line {
+      display: block;
+      margin-top: 4px;
+      color: #6b675f;
+      font-size: 14px;
+    }
+
+    .welcome-bottom {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .welcome-steps {
+      font-weight: 700;
+      color: #36573a;
+      margin-bottom: 8px;
+    }
+
+    .welcome-steps-de {
+      color: #36573a;
+      margin-bottom: 12px;
+    }
+
+    .welcome-premium {
+      color: #6b675f;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .welcome-footer {
+      border-top: 1px solid #ded6c9;
+      padding: 18px 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      font-size: 13px;
+      color: #36573a;
+      background: #fbfaf6;
+    }
+
+    .welcome-footer a {
+      color: #36573a;
+      text-decoration: none;
+    }
+
+    .welcome-footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 760px) {
+      .welcome-page {
+        min-height: auto;
+        padding: 34px 18px 28px;
+      }
+
+      .welcome-logo {
+        width: min(310px, 86vw);
+      }
+
       .welcome-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .welcome-card {
+        padding: 22px;
+      }
+
+      .welcome-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 18px;
       }
     }
   </style>
@@ -45,157 +168,82 @@
 
 <body>
 
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a href="index.html" class="brand-mini">
-      Oriella <span>Laundry &amp; Care</span>
-    </a>
-  </div>
-</header>
+  <main class="welcome-page">
+    <section class="welcome-wrap">
 
-<main>
+      <img src="Logo_semfundo.png" alt="Oriella Laundry & Care logo" class="welcome-logo" />
 
-<section class="hero hero-centered">
-  <div class="container narrow center">
+      <h1 class="welcome-title">Welcome to Oriella</h1>
 
-    <img src="Logo_semfundo.png"
-         alt="Oriella Laundry & Care logo"
-         class="hero-logo-top" />
+      <p class="welcome-subtitle">Willkommen bei Oriella</p>
 
-    <h1>Welcome to Oriella</h1>
-<p class="lead">
-  Willkommen bei Oriella
-</p>
-
-    <p class="lead">
-      Choose how you'd like to connect with us.<br>
-      Wählen Sie, wie Sie mit uns in Kontakt treten möchten.
-    </p>
-
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-
-    <div class="welcome-grid">
-
-      <a href="https://wa.me/41783516355"
-         target="_blank"
-         rel="noopener"
-         style="text-decoration:none;color:inherit;">
-
-        <article class="info-card">
-          <span class="welcome-icon"></span>
-          <h3>WhatsApp</h3>
-
-          <p>
-            Book a pickup or ask a question.<br>
-            Abholung buchen oder eine Frage stellen.
-          </p>
-        </article>
-
-      </a>
-
-      <a href="https://www.instagram.com/oriella.laundry/"
-         target="_blank"
-         rel="noopener"
-         style="text-decoration:none;color:inherit;">
-
-        <article class="info-card">
-          <span class="welcome-icon"></span>
-          <h3>Instagram</h3>
-
-          <p>
-            See reviews, updates and behind the scenes.<br>
-            Bewertungen, Neuigkeiten und Einblicke ansehen.
-          </p>
-        </article>
-
-      </a>
-
-      <a href="https://www.google.com/search?q=oriella+laundry+%26+care#mpd=~10068449794783824468/customers/reviews"
-         target="_blank"
-         rel="noopener"
-         style="text-decoration:none;color:inherit;">
-
-        <article class="info-card">
-          <span class="welcome-icon"></span>
-          <h3>Reviews</h3>
-
-          <p>
-            See what our clients say.<br>
-            Lesen Sie, was unsere Kundinnen und Kunden sagen.
-          </p>
-        </article>
-
-      </a>
-
-      <a href="https://oriella.ch/#services"
-         style="text-decoration:none;color:inherit;">
-
-        <article class="info-card">
-          <span class="welcome-icon"></span>
-          <h3>Services</h3>
-
-          <p>
-            Learn more about our services.<br>
-            Erfahren Sie mehr über unsere Dienstleistungen.
-          </p>
-        </article>
-
-      </a>
-
-    </div>
-
-    <div class="welcome-footer">
-
-      <p>🌿</p>
-
-      <p>
-        <strong>
-Collected • Cared For • Delivered
-</strong>
-
-<strong>
-Abgeholt • Gepflegt • Geliefert
-</strong>
-
-Premium laundry support for everyday life.
-Persönlicher Wäscheservice für den Alltag.
+      <p class="welcome-text">
+        Choose how you'd like to connect with us.<br>
+        Wählen Sie, wie Sie mit uns in Kontakt treten möchten.
       </p>
 
-    </div>
+      <div class="welcome-grid">
 
-  </div>
-</section>
-
-</main>
-
-<footer class="site-footer">
-  <div class="container footer-grid">
-
-    <div>
-      <h3>Oriella Laundry &amp; Care</h3>
-    </div>
-
-    <div>
-      <p>
-        <a href="tel:+41783516355">
-          +41 78 351 63 55
+        <a class="welcome-link" href="https://wa.me/41783516355" target="_blank" rel="noopener">
+          <article class="info-card welcome-card">
+            <h3>WhatsApp</h3>
+            <p>
+              Book a pickup or ask a question.
+              <span class="de-line">Abholung buchen oder eine Frage stellen.</span>
+            </p>
+          </article>
         </a>
-      </p>
 
-      <p>
-        <a href="mailto:info@oriella.ch">
-          info@oriella.ch
+        <a class="welcome-link" href="https://www.instagram.com/oriella.laundry/" target="_blank" rel="noopener">
+          <article class="info-card welcome-card">
+            <h3>Instagram</h3>
+            <p>
+              See updates and behind the scenes.
+              <span class="de-line">Neuigkeiten und Einblicke ansehen.</span>
+            </p>
+          </article>
         </a>
-      </p>
-    </div>
 
-  </div>
-</footer>
+        <a class="welcome-link" href="https://www.google.com/search?q=oriella+laundry+%26+care#mpd=~10068449794783824468/customers/reviews" target="_blank" rel="noopener">
+          <article class="info-card welcome-card">
+            <h3>Reviews</h3>
+            <p>
+              See what our clients say.
+              <span class="de-line">Lesen Sie, was unsere Kundinnen und Kunden sagen.</span>
+            </p>
+          </article>
+        </a>
+
+        <a class="welcome-link" href="https://oriella.ch/#services">
+          <article class="info-card welcome-card">
+            <h3>Services</h3>
+            <p>
+              Learn more about our services.
+              <span class="de-line">Erfahren Sie mehr über unsere Dienstleistungen.</span>
+            </p>
+          </article>
+        </a>
+
+      </div>
+
+      <div class="welcome-bottom">
+        <div class="welcome-steps">Collected • Cared For • Delivered</div>
+        <div class="welcome-steps-de">Abgeholt • Gepflegt • Geliefert</div>
+
+        <p class="welcome-premium">
+          Premium laundry support for everyday life.<br>
+          Persönlicher Wäscheservice für den Alltag.
+        </p>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="welcome-footer">
+    <div>Oriella Laundry &amp; Care</div>
+    <div><a href="mailto:info@oriella.ch">info@oriella.ch</a></div>
+    <div><a href="tel:+41783516355">+41 78 351 63 55</a></div>
+  </footer>
 
 </body>
 </html>
-```
