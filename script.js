@@ -1,5 +1,14 @@
 const translations = {
   en: {
+    nav_about: 'About',
+    about_label: 'About Oriella',
+    about_title: "Hi, I'm Maria.",
+    about_subtitle: 'The person behind Oriella.',
+    about_text_1: 'As a mum of two and someone who works full-time, I know how quickly laundry becomes one of those tasks that never really ends.',
+    about_text_2: 'I created Oriella because I realised that something I genuinely enjoy doing can make a real difference to other families.',
+    about_text_3: 'Every collection and delivery is handled personally, with the same care and attention I would want for my own home.',
+    about_text_4: 'My goal is simple: to give you back time, reduce everyday stress, and make laundry one less thing to think about.',
+    about_signature: 'Founder of Oriella 🌿',
     nav_services: 'Services',
     nav_pricing: 'Pricing',
     nav_how: 'How it works',
@@ -91,6 +100,16 @@ const translations = {
     footer_location_text: 'Zug and surrounding areas'
   },
   de: {
+    nav_about: 'Über',
+
+about_label: 'Über Oriella',
+about_title: 'Hallo, ich bin Maria.',
+about_subtitle: 'Die Person hinter Oriella.',
+about_text_1: 'Als Mutter von zwei Kindern und mit einer Vollzeitbeschäftigung weiss ich, wie schnell Wäsche zu einer Aufgabe wird, die nie wirklich endet.',
+about_text_2: 'Ich habe Oriella gegründet, weil ich gemerkt habe, dass etwas, das mir Freude bereitet, den Alltag anderer Familien spürbar erleichtern kann.',
+about_text_3: 'Jede Abholung und Lieferung betreue ich persönlich – mit derselben Sorgfalt und Aufmerksamkeit, die ich mir auch für meine eigene Familie wünschen würde.',
+about_text_4: 'Mein Ziel ist einfach: Ihnen Zeit zurückzugeben, den Alltagsstress zu reduzieren und dafür zu sorgen, dass Wäsche eine Sorge weniger ist.',
+about_signature: 'Gründerin von Oriella 🌿',
     nav_services: 'Leistungen',
     nav_pricing: 'Preise',
     nav_how: 'Ablauf',
