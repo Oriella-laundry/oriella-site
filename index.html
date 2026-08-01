@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Oriella Laundry & Care</title>
   <meta name="description" content="Oriella Laundry & Care offers personalized laundry support in Zug and surrounding areas, with free pickup and delivery for private clients." />
+  <link rel="icon" type="image/png" href="Logo_semfundo.png" />
+  <link rel="apple-touch-icon" href="Logo_semfundo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="booking.css" />
 </head>
 <body>
   <header class="site-header">
@@ -19,6 +22,7 @@
         <a href="#services" data-i18n="nav_services">Services</a>
         <a href="#pricing" data-i18n="nav_pricing">Pricing</a>
         <a href="#how" data-i18n="nav_how">How it works</a>
+        <a href="#book" data-i18n="nav_book">Book</a>
         <a href="#business" data-i18n="nav_business">Business</a>
         <a href="#contact" data-i18n="nav_contact">Contact</a>
       </nav>
@@ -40,7 +44,7 @@
           <span data-i18n="free_delivery_text">for private clients in Zug and surrounding areas.</span>
         </div>
         <div class="cta-row center">
-          <a class="btn btn-primary" href="https://wa.me/41783516355" target="_blank" rel="noopener" data-i18n="btn_book">Book Pickup</a>
+          <a class="btn btn-primary" href="#book" data-i18n="btn_book">Book Pickup</a>
           <a class="btn btn-secondary" href="https://wa.me/41783516355" target="_blank" rel="noopener" data-i18n="btn_whatsapp">WhatsApp Us</a>
           <a class="btn btn-ghost" href="mailto:info@oriella.ch" data-i18n="btn_quote">Request a Quote</a>
         </div>
@@ -225,6 +229,153 @@
       </div>
     </section>
 
+    <!-- ============ BOOKING (same page, click to open) ============ -->
+    <section id="book" class="section alt-bg">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-label" data-i18n="book_label">Book online</p>
+          <h2 data-i18n="book_title">Book a collection</h2>
+          <p class="section-subtitle" data-i18n="book_subtitle">Tell us a few details and choose a collection time — we'll confirm your booking shortly.</p>
+        </div>
+
+        <div id="ob-app">
+          <div class="toasts" id="ob-toasts"></div>
+
+          <div class="ob-reveal-wrap" id="ob-reveal-wrap">
+            <button type="button" class="obtn ob-reveal-btn" id="ob-reveal" data-ob="book_now">Book now</button>
+          </div>
+
+          <div id="ob-main" class="ob-hidden">
+            <form name="oriella-booking" data-netlify="true" netlify-honeypot="bot-field" hidden>
+              <input type="text" name="bot-field" />
+              <input name="fullName" /><input name="email" /><input name="phone" />
+              <input name="address" /><input name="postcode" /><input name="town" />
+              <input name="service" /><input name="garments" /><input name="express" />
+              <input name="date" /><input name="timeSlot" /><textarea name="notes"></textarea><input name="reference" />
+            </form>
+
+            <div id="customer-app">
+              <div class="ob-steps" id="ob-progress">
+                <button class="ob-step" type="button" data-go="card-when"><span class="bar"></span><span class="lbl" data-ob="p_date">Date</span></button>
+                <button class="ob-step" type="button" data-go="card-service"><span class="bar"></span><span class="lbl" data-ob="p_service">Service</span></button>
+                <button class="ob-step" type="button" data-go="card-details"><span class="bar"></span><span class="lbl" data-ob="p_details">Details</span></button>
+                <button class="ob-step" type="button" data-go="card-summary"><span class="bar"></span><span class="lbl" data-ob="p_confirm">Confirm</span></button>
+              </div>
+
+              <div id="form-view">
+                <div class="draft-banner" id="draft-banner">
+                  <span data-ob="draft_saved">We saved your progress on this device.</span>
+                  <button class="obtn tiny ghost" id="clear-draft" data-ob="draft_clear">Start over</button>
+                </div>
+
+                <form id="booking-form" novalidate>
+                  <section class="card" id="card-when">
+                    <span class="step-label" data-ob="step1">Step 1</span>
+                    <h2 data-ob="when_title">Collection date &amp; time</h2>
+                    <p class="sub" data-ob="when_sub">Choose a collection date on the calendar, then a time window. Only available dates can be selected.</p>
+                    <div id="ob-datecal"></div>
+                    <div class="slots ob-hidden" id="slots-block"><h3 data-ob="choose_slot">Choose a time slot</h3><div class="chips" id="slot-chips"></div></div>
+                    <span class="err-msg" id="datetime-err" data-ob="e_datetime">Please choose a date and time slot.</span>
+                  </section>
+
+                  <section class="card" id="card-service">
+                    <span class="step-label" data-ob="step2">Step 2</span>
+                    <h2 data-ob="service_title">Choose your service</h2>
+                    <p class="sub" data-ob="service_sub">Pick the option that suits your laundry.</p>
+                    <div class="options" id="service-options"></div>
+                    <div class="field ob-hidden" id="garments-field" style="margin-top:14px">
+                      <label for="garments"><span data-ob="l_garments">Which garments should we iron?</span> <span class="opt" data-ob="optional">(optional)</span></label>
+                      <input id="garments" name="garments" />
+                    </div>
+                    <label class="express" id="express-wrap" style="margin-top:14px">
+                      <input type="checkbox" id="express" name="express" />
+                      <div><div class="name"><span data-ob="express_name">Express Service</span> <span class="badge">+20%</span></div><div class="desc" data-ob="express_desc">Priority handling for a quicker turnaround.</div></div>
+                    </label>
+                    <span class="err-msg" id="service-err" data-ob="e_service">Please select a service.</span>
+                  </section>
+
+                  <section class="card" id="card-details">
+                    <span class="step-label" data-ob="step3">Step 3</span>
+                    <h2 data-ob="details_title">Your details</h2>
+                    <p class="sub" data-ob="details_sub">So we know where to collect from and how to reach you.</p>
+                    <div class="grid">
+                      <div class="field full"><label for="fullName" data-ob="l_name">Full name</label><input id="fullName" name="fullName" autocomplete="name" required /><span class="err-msg" data-ob="e_name">Please enter your full name.</span></div>
+                      <div class="field"><label for="email" data-ob="l_email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="email" required /><span class="err-msg" data-ob="e_email">Please enter a valid email.</span></div>
+                      <div class="field"><label for="phone" data-ob="l_phone">Phone number</label><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required /><span class="err-msg" data-ob="e_phone">Please enter your phone number.</span></div>
+                      <div class="field full"><label for="address" data-ob="l_address">Full address</label><input id="address" name="address" autocomplete="street-address" required /><span class="err-msg" data-ob="e_address">Please enter your address.</span></div>
+                      <div class="field"><label for="postcode" data-ob="l_postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" required /><span class="err-msg" data-ob="e_postcode">Please enter your postcode.</span></div>
+                      <div class="field"><label for="town" data-ob="l_town">Town / City</label><input id="town" name="town" autocomplete="address-level2" required /><span class="err-msg" data-ob="e_town">Please enter your town or city.</span></div>
+                    </div>
+                  </section>
+
+                  <section class="card">
+                    <span class="step-label" data-ob="step4">Step 4</span>
+                    <h2 data-ob="notes_title">Additional information</h2>
+                    <p class="sub" data-ob="notes_sub">Approximate amount of laundry, number of shirts, detergent preferences, access instructions, or anything else.</p>
+                    <div class="field full" style="margin:0"><textarea id="notes" name="notes"></textarea></div>
+                  </section>
+
+                  <section class="card" id="card-summary">
+                    <span class="step-label" data-ob="step5">Step 5</span>
+                    <h2 data-ob="summary_title">Booking summary</h2>
+                    <div id="summary"></div>
+                    <p class="price-note" data-ob="price_note">The final price will be confirmed after collection, once the laundry has been sorted and weighed.</p>
+                  </section>
+
+                  <button type="submit" class="obtn" id="submit-btn"><span id="submit-text" data-ob="submit">Request collection</span></button>
+                </form>
+              </div>
+
+              <div id="confirm-view" class="card confirm ob-hidden">
+                <div class="tick">✓</div>
+                <h2 data-ob="thankyou">Thank you!</h2>
+                <p data-ob="confirm_msg">Your Oriella collection request has been received. We'll confirm your booking shortly.</p>
+                <p class="ref" id="confirm-ref"></p>
+                <div class="recap" id="confirm-recap"></div>
+                <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                  <button class="obtn small" id="ics-btn" data-ob="add_calendar">Add to calendar</button>
+                  <button class="obtn ghost small" id="new-booking-btn" data-ob="another">Make another booking</button>
+                </div>
+              </div>
+
+            </div>
+
+            <div id="admin-app" class="ob-hidden">
+              <div class="admin-bar">
+                <h1>Oriella — Bookings</h1>
+                <div style="display:flex;gap:8px">
+                  <button class="obtn ghost small" id="admin-export">Export CSV</button>
+                  <button class="obtn ghost small" id="admin-exit">Back to site</button>
+                </div>
+              </div>
+              <div class="stat-row" id="stat-row"></div>
+              <div class="seg" id="bookings-view-toggle">
+                <button type="button" class="seg-btn active" data-v="list">List</button>
+                <button type="button" class="seg-btn" data-v="calendar">Calendar</button>
+              </div>
+              <div class="toolbar">
+                <input id="admin-search" placeholder="Search name, email, phone, postcode…" />
+                <select id="admin-filter"><option value="">All statuses</option></select>
+                <select id="admin-sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="coll">By collection date</option></select>
+              </div>
+              <div id="bookings-calendar" class="ob-hidden"></div>
+              <div id="day-filter-chip" class="ob-hidden" style="margin-bottom:12px"></div>
+              <div id="admin-list"></div>
+              <section class="card" style="margin-top:22px">
+                <h2 style="font-size:20px">Block dates &amp; time slots</h2>
+                <p class="sub">Click a date, then block the whole day or individual slots. Blocked times are hidden from customers.</p>
+                <div id="block-calendar"></div>
+                <div class="cal-legend"><span><span class="dot-s dot-blocked"></span> Blocked</span><span><span class="dot-s dot-booked"></span> Has a booking</span></div>
+                <div id="block-slot-manager"></div>
+                <h3 style="font-size:14px;margin:20px 0 0">All current blocks</h3>
+                <div class="block-list" id="block-list"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section alt-bg">
       <div class="container split">
         <div>
@@ -263,7 +414,10 @@
     </section>
   </main>
 
-  <footer id="contact" class="site-footer">
+  <footer id="contact" class="site-footer" style="position:relative">
+    <button id="staff-link" title="Staff"
+         style="position:absolute;right:16px;bottom:12px;background:none;border:none;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;color:inherit;opacity:.35;cursor:pointer;transition:opacity .2s"
+         onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=.35">Oriella</button>
     <div class="container footer-grid">
       <div>
         <h3>Oriella Laundry &amp; Care</h3>
@@ -283,5 +437,6 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="booking.js"></script>
 </body>
 </html>

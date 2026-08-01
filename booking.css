@@ -1,0 +1,187 @@
+/* =========================================================================
+   ORIELLA BOOKING — styles (scoped to #ob-app so they never affect the site)
+   Colours/fonts inherit the existing Oriella palette.
+   ========================================================================= */
+#ob-app{
+  --brand:#557d3f; --brand-dark:#355133; --brand-soft:#eef2e7;
+  --ink:#24312d; --paper:#f8f7f3; --sand:#d8c4a6;
+  --card:#ffffff; --border:#e8e2d7; --muted:#62706a;
+  --danger:#c0483c; --danger-bg:#fbecea; --ok:#2f7d5b; --ok-bg:#e6f4ec;
+  --warn-bg:#fdf5e4; --warn-text:#8a6d1e;
+  --radius:18px; --shadow:0 16px 40px rgba(36,49,45,.08); --shadow-lg:0 20px 52px rgba(36,49,45,.18);
+  color:var(--ink);
+}
+#ob-app *{box-sizing:border-box}
+#ob-app .ob-intro{text-align:center;max-width:560px;margin:0 auto 26px}
+#ob-app .ob-intro p{color:var(--muted);margin-top:6px}
+
+/* progress */
+#ob-app .ob-steps{display:flex;gap:6px;max-width:620px;margin:0 auto 24px}
+#ob-app .ob-step{flex:1;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit;padding:2px}
+#ob-app .ob-step .bar{height:5px;border-radius:4px;background:var(--border);margin-bottom:6px;transition:background .25s}
+#ob-app .ob-step.done .bar{background:var(--brand)}
+#ob-app .ob-step.done{color:var(--brand);font-weight:600}
+#ob-app .ob-step .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+
+/* card */
+#ob-app .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;margin-bottom:22px;scroll-margin-top:90px}
+#ob-app .step-label{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+#ob-app .card h2{font-family:var(--font-head,'Cormorant Garamond',serif);font-size:24px;margin:0 0 4px;line-height:1.15}
+#ob-app .card .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+
+/* fields */
+#ob-app .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#ob-app .field{display:flex;flex-direction:column;margin-bottom:14px}
+#ob-app .field.full{grid-column:1 / -1}
+#ob-app label{font-size:14px;font-weight:600;margin-bottom:6px}
+#ob-app label .opt{font-weight:400;color:var(--muted)}
+#ob-app input,#ob-app select,#ob-app textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 12px;width:100%;transition:border-color .15s,box-shadow .15s}
+#ob-app input:focus,#ob-app select:focus,#ob-app textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+#ob-app textarea{resize:vertical;min-height:96px}
+#ob-app .err-msg{color:var(--danger);font-size:13px;margin-top:5px;display:none}
+#ob-app .field.invalid input,#ob-app .field.invalid textarea{border-color:var(--danger);background:var(--danger-bg)}
+#ob-app .field.invalid .err-msg{display:block}
+#ob-app .field.ok input{border-color:#bcd8cd}
+
+/* service options */
+#ob-app .options{display:flex;flex-direction:column;gap:12px}
+#ob-app .option{position:relative;border:1.5px solid var(--border);border-radius:12px;padding:16px 16px 16px 52px;cursor:pointer;transition:border-color .15s,background .15s}
+#ob-app .option:hover{border-color:var(--brand)}
+#ob-app .option input{position:absolute;left:16px;top:18px;width:20px;height:20px;accent-color:var(--brand);cursor:pointer}
+#ob-app .option .name{font-weight:700;font-size:16px}
+#ob-app .option .incl{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}
+#ob-app .option .incl li{color:var(--muted);font-size:13.5px;display:flex;align-items:center;gap:5px}
+#ob-app .option .incl li::before{content:"✓";color:var(--brand);font-weight:800;font-size:12px}
+#ob-app .option .note{color:var(--muted);font-size:13.5px;margin-top:6px}
+#ob-app .option.selected{border-color:var(--brand);background:var(--brand-soft)}
+
+/* express */
+#ob-app .express{display:flex;align-items:flex-start;gap:12px;border:1.5px solid var(--border);border-radius:12px;padding:15px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+#ob-app .express:hover{border-color:var(--brand)}
+#ob-app .express.selected{border-color:var(--brand);background:var(--brand-soft)}
+#ob-app .express input{width:20px;height:20px;margin-top:2px;accent-color:var(--brand);cursor:pointer;flex:none}
+#ob-app .express .name{font-weight:700}
+#ob-app .express .desc{color:var(--muted);font-size:14px}
+#ob-app .badge{background:var(--brand);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+
+/* date & time */
+#ob-app .chips{display:flex;flex-wrap:wrap;gap:10px}
+#ob-app .chip{border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font:inherit;font-size:14px;transition:all .12s;text-align:center;min-width:104px}
+#ob-app .chip:hover{border-color:var(--brand)}
+#ob-app .chip.selected{background:var(--brand);border-color:var(--brand);color:#fff}
+#ob-app .chip .d-day{display:block;font-weight:700}
+#ob-app .chip .d-date{display:block;font-size:12px;opacity:.85}
+#ob-app .empty-note{color:var(--muted);font-size:14px;padding:10px 0}
+#ob-app .slots{margin-top:16px}
+#ob-app .slots h3{font-size:15px;font-weight:700;margin:0 0 8px}
+
+/* summary */
+#ob-app .summary-row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px dashed var(--border);font-size:15px}
+#ob-app .summary-row:last-of-type{border-bottom:none}
+#ob-app .summary-row .k{color:var(--muted)}
+#ob-app .summary-row .v{font-weight:600;text-align:right}
+#ob-app .summary-empty{color:var(--muted);font-size:14px}
+#ob-app .price-note{margin-top:16px;background:var(--warn-bg);color:var(--warn-text);border-radius:10px;padding:12px 14px;font-size:14px}
+
+/* buttons (obtn — renamed to avoid clashing with the site's .btn) */
+#ob-app .obtn{font:inherit;font-weight:600;letter-spacing:.02em;border:none;border-radius:999px;padding:14px 22px;cursor:pointer;background:var(--brand);color:#fff;transition:background .15s,transform .05s;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px}
+#ob-app .obtn:hover{background:var(--brand-dark)}
+#ob-app .obtn:active{transform:translateY(1px)}
+#ob-app .obtn:disabled{opacity:.6;cursor:progress}
+#ob-app .obtn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+#ob-app .obtn.ghost:hover{background:var(--brand-soft)}
+#ob-app .obtn.small{width:auto;padding:9px 16px;font-size:14px}
+#ob-app .obtn.tiny{width:auto;padding:6px 12px;font-size:13px}
+#ob-app .obtn.danger{background:var(--danger)}
+#ob-app .obtn.danger:hover{background:#a53a30}
+#ob-app .spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:ob-spin .7s linear infinite}
+@keyframes ob-spin{to{transform:rotate(360deg)}}
+
+/* confirmation */
+#ob-app .confirm{text-align:center;padding:40px 24px}
+#ob-app .confirm .tick{width:74px;height:74px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:38px;animation:ob-pop .4s ease}
+@keyframes ob-pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+#ob-app .confirm h2{font-family:var(--font-head,'Cormorant Garamond',serif);font-size:28px;margin-bottom:12px}
+#ob-app .confirm p{color:var(--muted);max-width:460px;margin:0 auto 8px}
+#ob-app .confirm .ref{margin-top:18px;font-weight:700;color:var(--ink)}
+#ob-app .recap{text-align:left;max-width:460px;margin:22px auto 0;border:1px solid var(--border);border-radius:12px;padding:6px 16px}
+
+/* staff link + draft */
+#ob-app .foot{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 0}
+#ob-app .foot a{cursor:pointer;text-decoration:underline;color:var(--muted)}
+#ob-app .draft-banner{display:none;align-items:center;justify-content:space-between;gap:12px;background:var(--brand-soft);border:1px solid #bcd8cd;border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:14px}
+
+/* toasts */
+#ob-app .toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:420px}
+#ob-app .toast{background:var(--ink);color:#fff;border-radius:10px;padding:12px 16px;font-size:14px;box-shadow:var(--shadow-lg);animation:ob-slidein .25s ease}
+#ob-app .toast.err{background:var(--danger)}
+#ob-app .toast.ok{background:var(--ok)}
+@keyframes ob-slidein{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* admin */
+#ob-app .admin-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+#ob-app .admin-bar h1{font-family:var(--font-head,'Cormorant Garamond',serif);font-size:28px;margin:0}
+#ob-app .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+#ob-app .toolbar input,#ob-app .toolbar select{width:auto;flex:1;min-width:140px}
+#ob-app .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+#ob-app .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:110px}
+#ob-app .stat .n{font-size:26px;font-weight:800;font-family:var(--font-head,'Cormorant Garamond',serif)}
+#ob-app .stat .l{color:var(--muted);font-size:13px}
+#ob-app .booking{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+#ob-app .booking .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+#ob-app .booking .who{font-weight:700;font-size:16px}
+#ob-app .booking .meta{color:var(--muted);font-size:13px;margin-top:2px}
+#ob-app .pill{border-radius:20px;padding:3px 11px;font-size:12px;font-weight:700;white-space:nowrap;display:inline-block}
+#ob-app .detail{font-size:14px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+#ob-app .detail .k{color:var(--muted)}
+#ob-app .detail a{text-decoration:none;color:var(--brand)}
+#ob-app .booking .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+#ob-app .block-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#ob-app .block-tag{background:var(--brand-soft);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:13px;display:flex;align-items:center;gap:8px}
+#ob-app .block-tag button{border:none;background:none;color:var(--danger);cursor:pointer;font-size:15px;line-height:1;padding:0}
+
+/* segmented toggle + calendars */
+#ob-app .seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:3px;background:#fff;margin-bottom:14px}
+#ob-app .seg-btn{border:none;background:none;padding:6px 16px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;color:var(--muted)}
+#ob-app .seg-btn.active{background:var(--brand);color:#fff;font-weight:600}
+#ob-app .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+#ob-app .cal-title{font-weight:600;font-family:var(--font-head,'Cormorant Garamond',serif);font-size:20px}
+#ob-app .cal-nav{display:flex;gap:6px}
+#ob-app .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+#ob-app .cal-dow{text-align:center;font-size:12px;color:var(--muted);font-weight:600;padding:2px 0}
+#ob-app .cal-cell{border:1px solid var(--border);border-radius:10px;min-height:62px;padding:6px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:border-color .12s}
+#ob-app .cal-cell:hover{border-color:var(--brand)}
+#ob-app .cal-cell.empty{background:transparent;border:none;cursor:default}
+#ob-app .cal-cell.past{opacity:.45;cursor:not-allowed;background:#f1efe8}
+#ob-app .cal-cell.past:hover{border-color:var(--border)}
+#ob-app .cal-cell.selected{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft)}
+#ob-app .cal-daynum{font-size:13px;font-weight:600}
+#ob-app .cal-badge{align-self:flex-start;background:var(--brand);color:#fff;border-radius:20px;font-size:11px;padding:1px 8px;font-weight:700}
+#ob-app .cal-dots{display:flex;gap:3px;margin-top:auto}
+#ob-app .dot-s{width:8px;height:8px;border-radius:50%;display:inline-block}
+#ob-app .dot-blocked{background:var(--danger)}
+#ob-app .dot-booked{background:#b7bfbb}
+#ob-app .slot-manage{margin-top:16px;border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+#ob-app .slot-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border);font-size:14px}
+#ob-app .slot-row:last-child{border-bottom:none}
+#ob-app .slot-status{font-size:12px;padding:2px 10px;border-radius:20px;font-weight:700}
+#ob-app .cal-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+#ob-app .cal-legend span{display:flex;align-items:center;gap:6px}
+#ob-app .ob-hidden{display:none !important}
+#ob-app .ob-reveal-wrap{text-align:center;padding:6px 0 2px}
+#ob-app .ob-reveal-btn{width:auto;font-size:17px;padding:16px 44px}
+#ob-app #ob-main{animation:ob-reveal .3s ease}
+@keyframes ob-reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#ob-app .cal-cell.unavail{opacity:.4;cursor:not-allowed;background:#f1efe8;color:var(--muted)}
+#ob-app .cal-cell.unavail:hover{border-color:var(--border)}
+
+@media (max-width:560px){
+  #ob-app .grid{grid-template-columns:1fr}
+  #ob-app .card{padding:20px 16px}
+  #ob-app .detail{grid-template-columns:1fr}
+  #ob-app .chip{flex:1;min-width:calc(50% - 5px)}
+  #ob-app .cal-cell{min-height:52px;padding:4px}
+  #ob-app .cal-daynum{font-size:12px}
+  #ob-app .cal-badge{font-size:10px;padding:1px 5px}
+  #ob-app .ob-step .lbl{font-size:11px}
+}
