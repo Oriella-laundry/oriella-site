@@ -15,6 +15,70 @@ const EMAILJS = {
   adminEmail:'info@oriella.ch'
 };
 
+/* ---------- Shared database (Supabase) + staff login ---------- */
+const SB = {
+  enabled:true,
+  url:'https://wvwdfnbtgqkdoliqyljz.supabase.co',
+  key:'sb_publishable_2eeKqaUoF_kBapTIPQhJ2Q_SAgJpbW9'
+};
+const AUTH_KEY='oriella_auth';
+/* --- staff auth (Supabase Auth) --- */
+function getAuth(){ try{return JSON.parse(localStorage.getItem(AUTH_KEY))}catch(e){return null} }
+function setAuth(a){ if(a)localStorage.setItem(AUTH_KEY,JSON.stringify(a)); else localStorage.removeItem(AUTH_KEY); }
+function isLoggedIn(){ const a=getAuth(); return !!(a&&a.access_token&&a.expires_at&&a.expires_at*1000>Date.now()+5000); }
+async function sbLogin(email,password){
+  const r=await fetch(`${SB.url}/auth/v1/token?grant_type=password`,{method:'POST',headers:{apikey:SB.key,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const d=await r.json();
+  if(!r.ok||!d.access_token) throw new Error(d.error_description||d.msg||'Invalid email or password');
+  setAuth({access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at,email:email});
+}
+async function sbRefresh(){
+  const a=getAuth(); if(!a||!a.refresh_token) return false;
+  try{
+    const r=await fetch(`${SB.url}/auth/v1/token?grant_type=refresh_token`,{method:'POST',headers:{apikey:SB.key,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:a.refresh_token})});
+    const d=await r.json();
+    if(!r.ok||!d.access_token){ setAuth(null); return false; }
+    setAuth({access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at,email:a.email});
+    return true;
+  }catch(e){ return false; }
+}
+function sbLogout(){ setAuth(null); }
+async function authHeaders(extra){
+  let a=getAuth();
+  if(a&&a.expires_at&&a.expires_at*1000<Date.now()+15000){ await sbRefresh(); a=getAuth(); }
+  return Object.assign({apikey:SB.key,Authorization:'Bearer '+(a?a.access_token:SB.key),'Content-Type':'application/json'}, extra||{});
+}
+/* --- public (anon) headers: apikey only --- */
+function sbHeaders(extra){ return Object.assign({apikey:SB.key,'Content-Type':'application/json'}, extra||{}); }
+/* --- reads/writes --- */
+async function sbGetBookings(){ const r=await fetch(`${SB.url}/rest/v1/bookings?select=data&order=created_at.asc`,{headers:await authHeaders()}); if(!r.ok)throw new Error('bookings '+r.status); return (await r.json()).map(x=>x.data); }
+async function sbGetTakenSlots(){ const r=await fetch(`${SB.url}/rest/v1/taken_slots?select=date,slot`,{headers:sbHeaders()}); if(!r.ok)throw new Error('taken '+r.status); return await r.json(); }
+async function sbInsertBooking(b){ const r=await fetch(`${SB.url}/rest/v1/bookings`,{method:'POST',headers:sbHeaders(),body:JSON.stringify({id:b.id,data:b})}); if(!r.ok)throw new Error('insert '+r.status+' '+await r.text()); }
+async function sbUpdateBooking(b){ const r=await fetch(`${SB.url}/rest/v1/bookings?id=eq.${encodeURIComponent(b.id)}`,{method:'PATCH',headers:await authHeaders(),body:JSON.stringify({data:b})}); if(!r.ok)throw new Error('update '+r.status); }
+async function sbDeleteBooking(id){ const r=await fetch(`${SB.url}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:await authHeaders()}); if(!r.ok)throw new Error('delete '+r.status); }
+async function sbGetBlocks(){ const r=await fetch(`${SB.url}/rest/v1/app_state?key=eq.blocks&select=data`,{headers:sbHeaders()}); if(!r.ok)throw new Error('blocks '+r.status); const rows=await r.json(); return rows[0]?rows[0].data:{dates:[],slots:{}}; }
+async function sbSaveBlocks(blk){ const r=await fetch(`${SB.url}/rest/v1/app_state`,{method:'POST',headers:await authHeaders({Prefer:'resolution=merge-duplicates'}),body:JSON.stringify({key:'blocks',data:blk})}); if(!r.ok)throw new Error('save blocks '+r.status); }
+let _bookingsCache=null, _blocksCache=null, _takenCache=null;
+function isSlotTaken(k,s){ const tc=_takenCache||(store.bookings.filter(b=>b.status!=='Cancelled').map(b=>({date:b.date,slot:b.slot}))); return tc.some(t=>t.date===k&&t.slot===s); }
+async function refreshFromDB(){
+  if(!SB.enabled)return;
+  try{
+    const blk=await sbGetBlocks();
+    _blocksCache=blk; localStorage.setItem('oriella_blocks',JSON.stringify(blk));
+    if(isLoggedIn()){
+      const bk=await sbGetBookings();
+      _bookingsCache=bk; localStorage.setItem('oriella_bookings',JSON.stringify(bk));
+      _takenCache=bk.filter(b=>b.status!=='Cancelled').map(b=>({date:b.date,slot:b.slot}));
+    }else{
+      _takenCache=await sbGetTakenSlots();
+    }
+    renderDates(); renderSlots();
+    if(document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('ob-hidden')){
+      renderStats(); if(typeof applyBookingsView==='function')applyBookingsView(); renderAdminList(); renderBlockCalendar(); renderSlotManager(); renderBlocks();
+    }
+  }catch(e){ console.warn('Oriella: DB sync failed, using local copy —', e.message); }
+}
+
 /* ---------- Translations ---------- */
 const OB_T = {
   en:{
@@ -116,10 +180,10 @@ const STATUS_COLORS={'New Request':['#eef1f0','#4a5652'],'Confirmed':['#e6f0fb',
 const DAYS_AHEAD=21, ADMIN_PASSCODE='oriellatest', DRAFT_KEY='oriella_draft';
 
 const store={
-  get bookings(){ try{return JSON.parse(localStorage.getItem('oriella_bookings')||'[]')}catch(e){return[]} },
-  set bookings(v){ localStorage.setItem('oriella_bookings',JSON.stringify(v)) },
-  get blocks(){ try{return JSON.parse(localStorage.getItem('oriella_blocks')||'{"dates":[],"slots":{}}')}catch(e){return{dates:[],slots:{}}} },
-  set blocks(v){ localStorage.setItem('oriella_blocks',JSON.stringify(v)) }
+  get bookings(){ if(_bookingsCache)return _bookingsCache; try{return JSON.parse(localStorage.getItem('oriella_bookings')||'[]')}catch(e){return[]} },
+  set bookings(v){ _bookingsCache=v; localStorage.setItem('oriella_bookings',JSON.stringify(v)) },
+  get blocks(){ if(_blocksCache)return _blocksCache; try{return JSON.parse(localStorage.getItem('oriella_blocks')||'{"dates":[],"slots":{}}')}catch(e){return{dates:[],slots:{}}} },
+  set blocks(v){ _blocksCache=v; localStorage.setItem('oriella_blocks',JSON.stringify(v)); if(SB.enabled)sbSaveBlocks(v).catch(e=>console.warn('Oriella: block save failed —',e.message)); }
 };
 const state={ service:null, date:null, slot:null, express:false };
 let lastBooking=null, bookingsView='list', adminDayFilter=null, blockSelDate=null;
@@ -146,7 +210,7 @@ function toast(msg,type){ const t=document.createElement('div');t.className='toa
 
 function isDateBlocked(k){ return store.blocks.dates.includes(k); }
 function isSlotBlocked(k,s){ if(isDateBlocked(k))return true;return (store.blocks.slots[k]||[]).includes(s); }
-function isSlotBooked(k,s){ return store.bookings.some(b=>b.date===k&&b.slot===s&&b.status!=='Cancelled'); }
+function isSlotBooked(k,s){ return isSlotTaken(k,s); }
 function availableSlots(k){ return SLOTS.filter(s=>!isSlotBlocked(k,s.id)&&!isSlotBooked(k,s.id)); }
 function availableDates(){ const out=[];const t=new Date();t.setHours(0,0,0,0);for(let i=1;i<=DAYS_AHEAD;i++){const d=new Date(t);d.setDate(d.getDate()+i);const k=dateKey(d);if(availableSlots(k).length)out.push({key:k,d});}return out; }
 
@@ -253,13 +317,17 @@ function makeRef(){ return 'ORI-'+Date.now().toString(36).toUpperCase().slice(-5
 async function handleSubmit(e){
   e.preventDefault();
   if(!validateAll()){ toast(L('t_incomplete'),'err'); document.querySelector('#ob-app .field.invalid, #ob-app .err-msg[style*="block"]')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
-  if(!availableSlots(state.date).some(s=>s.id===state.slot)){ toast(L('t_slot_taken'),'err');state.slot=null;renderDates();renderSlots();afterChange();return; }
   const btn=$('#submit-btn'); btn.disabled=true; $('#submit-text').textContent=L('submit_sending'); btn.insertAdjacentHTML('beforeend','<span class="spinner"></span>');
+  // pull the latest taken slots from the shared DB so we don't double-book across devices
+  try{ if(SB.enabled){ _takenCache=await sbGetTakenSlots(); } }catch(err){}
+  if(!availableSlots(state.date).some(s=>s.id===state.slot)){ btn.disabled=false; $('#submit-text').textContent=L('submit'); $('#submit-btn .spinner')?.remove(); toast(L('t_slot_taken'),'err');state.slot=null;renderDates();renderSlots();afterChange();return; }
   const ref=makeRef();
   const b={ id:ref,createdAt:new Date().toISOString(),fullName:val('fullName'),email:val('email'),phone:val('phone'),
     address:val('address'),postcode:val('postcode'),town:val('town'),service:state.service,serviceLabel:enSvc(state.service),
     garments:val('garments'),express:state.express,date:state.date,slot:state.slot,slotLabel:enSlot(state.slot),notes:val('notes'),status:'New Request' };
   const all=store.bookings; all.push(b); store.bookings=all;
+  if(_takenCache)_takenCache.push({date:b.date,slot:b.slot});
+  try{ if(SB.enabled)await sbInsertBooking(b); }catch(err){ console.warn('Oriella: DB save failed (email still sent) —',err.message); }
   submitToNetlify(b);
   try{ await sendEmails(b); }catch(err){}
   clearDraft(); showConfirmation(b);
@@ -334,8 +402,8 @@ function renderAdminList(){
   $$('[data-cancel]',wrap).forEach(x=>x.addEventListener('click',e=>{ if(confirm('Cancel this booking? The slot will be freed.'))updateStatus(e.target.dataset.cancel,'Cancelled'); }));
   $$('[data-del]',wrap).forEach(x=>x.addEventListener('click',e=>{ if(confirm('Permanently delete this booking?'))deleteBooking(e.target.dataset.del); }));
 }
-function updateStatus(id,s){ const all=store.bookings,b=all.find(x=>x.id===id);if(!b)return;b.status=s;store.bookings=all;renderStats();renderAdminList();toast('Status updated to “'+s+'”.','ok'); }
-function deleteBooking(id){ store.bookings=store.bookings.filter(b=>b.id!==id);renderStats();renderAdminList();toast('Booking deleted.','ok'); }
+function updateStatus(id,s){ const all=store.bookings,b=all.find(x=>x.id===id);if(!b)return;b.status=s;store.bookings=all;renderStats();renderAdminList();toast('Status updated to “'+s+'”.','ok'); if(SB.enabled)sbUpdateBooking(b).catch(e=>console.warn('Oriella: status sync failed —',e.message)); }
+function deleteBooking(id){ store.bookings=store.bookings.filter(b=>b.id!==id);renderStats();renderAdminList();toast('Booking deleted.','ok'); if(SB.enabled)sbDeleteBooking(id).catch(e=>console.warn('Oriella: delete sync failed —',e.message)); }
 function exportCSV(){ const list=currentAdminList();if(!list.length){toast('Nothing to export.','err');return;}const cols=['id','status','createdAt','fullName','email','phone','address','town','postcode','serviceLabel','garments','express','date','slotLabel','notes'];const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const rows=[cols.join(',')].concat(list.map(b=>cols.map(c=>q(c==='express'?(b.express?'Yes':'No'):c==='date'?fmtFull(b.date,true):b[c])).join(',')));const url=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));const a=document.createElement('a');a.href=url;a.download='oriella-bookings.csv';a.click();URL.revokeObjectURL(url); }
 
 /* bookings calendar */
@@ -387,9 +455,11 @@ function renderBlocks(){
 }
 function removeBlock(date,slot){ const b=store.blocks;if(slot==='ALL')b.dates=b.dates.filter(d=>d!==date);else{b.slots[date]=(b.slots[date]||[]).filter(s=>s!==slot);if(!b.slots[date].length)delete b.slots[date];}store.blocks=b;renderBlocks();if($('#block-calendar')){renderBlockCalendar();renderSlotManager();} }
 
-function openAdmin(){ const p=prompt('Enter Oriella staff passcode:');if(p===null)return;if(p!==ADMIN_PASSCODE){toast('Incorrect passcode.','err');return;}showAdmin(); }
-function showAdmin(){ $('#ob-reveal-wrap')?.classList.add('ob-hidden');$('#ob-main')?.classList.remove('ob-hidden');$('#customer-app').classList.add('ob-hidden');$('#admin-app').classList.remove('ob-hidden');renderStats();applyBookingsView();renderAdminList();renderBlockCalendar();renderSlotManager();renderBlocks();document.getElementById('book').scrollIntoView({behavior:'smooth'}); }
-function showCustomer(){ $('#admin-app').classList.add('ob-hidden');$('#customer-app').classList.remove('ob-hidden');$('#ob-main').classList.add('ob-hidden');$('#ob-reveal-wrap').classList.remove('ob-hidden'); }
+function openAdmin(){ if(isLoggedIn()){ showAdmin(); return; } showLogin(); }
+function showLogin(){ $('#ob-reveal-wrap')?.classList.add('ob-hidden');$('#ob-main')?.classList.remove('ob-hidden');$('#customer-app').classList.add('ob-hidden');$('#admin-app').classList.add('ob-hidden');$('#admin-login').classList.remove('ob-hidden');document.getElementById('book').scrollIntoView({behavior:'smooth'}); setTimeout(()=>$('#login-email')?.focus(),300); }
+function showAdmin(){ $('#admin-login')?.classList.add('ob-hidden');$('#ob-reveal-wrap')?.classList.add('ob-hidden');$('#ob-main')?.classList.remove('ob-hidden');$('#customer-app').classList.add('ob-hidden');$('#admin-app').classList.remove('ob-hidden');renderStats();applyBookingsView();renderAdminList();renderBlockCalendar();renderSlotManager();renderBlocks();document.getElementById('book').scrollIntoView({behavior:'smooth'}); refreshFromDB(); }
+function showCustomer(){ $('#admin-app').classList.add('ob-hidden');$('#admin-login')?.classList.add('ob-hidden');$('#customer-app').classList.remove('ob-hidden');$('#ob-main').classList.add('ob-hidden');$('#ob-reveal-wrap').classList.remove('ob-hidden'); }
+function doLogout(){ sbLogout(); _bookingsCache=null; showCustomer(); refreshFromDB(); toast('Logged out.','ok'); }
 
 /* ---------- re-render on language change ---------- */
 function renderAllOB(){ translateStatic();renderServices();renderDates();renderSlots();renderSummary();if(!$('#confirm-view').classList.contains('ob-hidden'))renderConfirmation(); }
@@ -410,6 +480,16 @@ $('#clear-draft').addEventListener('click',()=>{ clearDraft();state.service=stat
 $('#staff-link').addEventListener('click',openAdmin);
 $('#admin-exit').addEventListener('click',showCustomer);
 $('#admin-export').addEventListener('click',exportCSV);
+$('#admin-logout')?.addEventListener('click',doLogout);
+$('#login-form')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=($('#login-email').value||'').trim(), pw=$('#login-pass').value||'';
+  const btn=$('#login-btn'); const orig=btn.textContent; btn.disabled=true; btn.textContent='…';
+  try{ await sbLogin(email,pw); $('#login-pass').value=''; showAdmin(); }
+  catch(err){ toast(err.message||'Login failed','err'); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+});
+$('#login-cancel')?.addEventListener('click',showCustomer);
 $$('#ob-progress .ob-step').forEach(s=>s.addEventListener('click',()=>$('#'+s.dataset.go).scrollIntoView({behavior:'smooth',block:'start'})));
 $('#admin-search').addEventListener('input',renderAdminList);
 $('#admin-filter').addEventListener('change',renderAdminList);
@@ -419,4 +499,5 @@ STATUSES.forEach(s=>$('#admin-filter').insertAdjacentHTML('beforeend',`<option v
 document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAllOB,0)));
 
 restoreDraft();
+refreshFromDB();   // pull the shared bookings/blocks so availability + admin are up to date
 })();

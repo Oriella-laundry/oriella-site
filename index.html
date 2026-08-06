@@ -340,11 +340,25 @@
 
             </div>
 
+            <div id="admin-login" class="ob-hidden">
+              <div class="card" style="max-width:420px;margin:0 auto">
+                <h2 style="font-size:22px;margin-bottom:4px">Staff login</h2>
+                <p class="sub">Sign in to manage bookings.</p>
+                <form id="login-form" novalidate>
+                  <div class="field full"><label for="login-email">Email</label><input id="login-email" type="email" autocomplete="username" /></div>
+                  <div class="field full"><label for="login-pass">Password</label><input id="login-pass" type="password" autocomplete="current-password" /></div>
+                  <button type="submit" class="obtn" id="login-btn">Log in</button>
+                  <button type="button" class="obtn ghost small" id="login-cancel" style="margin-top:10px">Back to site</button>
+                </form>
+              </div>
+            </div>
+
             <div id="admin-app" class="ob-hidden">
               <div class="admin-bar">
                 <h1>Oriella — Bookings</h1>
                 <div style="display:flex;gap:8px">
                   <button class="obtn ghost small" id="admin-export">Export CSV</button>
+                  <button class="obtn ghost small" id="admin-logout">Log out</button>
                   <button class="obtn ghost small" id="admin-exit">Back to site</button>
                 </div>
               </div>
