@@ -94,6 +94,7 @@ const OB_T = {
     l_garments:'Which garments should we iron?', optional:'(optional)', garments_ph:'e.g. 5 shirts, 2 pairs of trousers, 1 dress',
     e_service:'Please select a service.',
     express_title:'Need it faster?', express_name:'Express Service', express_desc:'Priority handling for a quicker turnaround.',
+    sens_title:'Sensitive needs', sens_products:'Sensitive products', sens_products_desc:'Gentle detergent for sensitive skin.', sens_noperfume:'Without perfume', sens_noperfume_desc:'No fragrance / perfume-free.', s_sensitive:'Sensitive needs',
     when_title:'Collection date & time', when_sub:'We collect in the evening. Only available dates are shown.',
     choose_slot:'Choose a time slot', e_datetime:'Please choose a date and time slot.',
     notes_title:'Additional information', notes_sub:'Approximate amount of laundry, number of shirts, detergent preferences, access instructions, or anything else.',
@@ -131,6 +132,7 @@ const OB_T = {
     l_garments:'Welche Teile sollen wir bügeln?', optional:'(optional)', garments_ph:'z. B. 5 Hemden, 2 Hosen, 1 Kleid',
     e_service:'Bitte wählen Sie einen Service.',
     express_title:'Schneller nötig?', express_name:'Express-Service', express_desc:'Bevorzugte Bearbeitung für eine schnellere Rückgabe.',
+    sens_title:'Empfindliche Bedürfnisse', sens_products:'Sensitive Produkte', sens_products_desc:'Mildes Waschmittel für empfindliche Haut.', sens_noperfume:'Ohne Parfüm', sens_noperfume_desc:'Ohne Duft / parfümfrei.', s_sensitive:'Empfindliche Bedürfnisse',
     when_title:'Abholdatum & Uhrzeit', when_sub:'Wir holen abends ab. Es werden nur verfügbare Termine angezeigt.',
     choose_slot:'Zeitfenster wählen', e_datetime:'Bitte wählen Sie Datum und Zeitfenster.',
     notes_title:'Zusätzliche Informationen', notes_sub:'Ungefähre Wäschemenge, Anzahl Hemden, Waschmittelwünsche, Zugangshinweise oder Sonstiges.',
@@ -167,13 +169,21 @@ const SERVICES=[
   {id:'ironing', nameKey:'svc_iron', noteKey:'n_iron'},
   {id:'wash-iron', nameKey:'svc_wi', incl:['i_wash','i_dry','i_iron'], noteKey:'n_wi'}
 ];
-const SLOTS=[
+const SLOTS_WEEKDAY=[   // Mon–Fri (evenings)
   {id:'17-18', start:'17:00', end:'18:00'},
   {id:'18-19', start:'18:00', end:'19:00'},
   {id:'19-20', start:'19:00', end:'20:00'}
 ];
-const SLOT_LABELS={ en:{'17-18':'5:00 – 6:00 PM','18-19':'6:00 – 7:00 PM','19-20':'7:00 – 8:00 PM'},
-                    de:{'17-18':'17:00 – 18:00 Uhr','18-19':'18:00 – 19:00 Uhr','19-20':'19:00 – 20:00 Uhr'} };
+const SLOTS_SAT=[       // Saturday (mornings)
+  {id:'08-09', start:'08:00', end:'09:00'},
+  {id:'09-10', start:'09:00', end:'10:00'},
+  {id:'10-11', start:'10:00', end:'11:00'}
+];
+const ALL_SLOTS=[...SLOTS_WEEKDAY,...SLOTS_SAT];
+const SLOT_CAPACITY=2;  // at least 2 bookings allowed per time slot
+function slotsForDate(key){ const wd=new Date(key+'T00:00:00').getDay(); if(wd===0)return []; if(wd===6)return SLOTS_SAT; return SLOTS_WEEKDAY; } // Sun=none, Sat=morning, else evening
+const SLOT_LABELS={ en:{'17-18':'5:00 – 6:00 PM','18-19':'6:00 – 7:00 PM','19-20':'7:00 – 8:00 PM','08-09':'8:00 – 9:00 AM','09-10':'9:00 – 10:00 AM','10-11':'10:00 – 11:00 AM'},
+                    de:{'17-18':'17:00 – 18:00 Uhr','18-19':'18:00 – 19:00 Uhr','19-20':'19:00 – 20:00 Uhr','08-09':'08:00 – 09:00 Uhr','09-10':'09:00 – 10:00 Uhr','10-11':'10:00 – 11:00 Uhr'} };
 const STATUSES=['New Request','Confirmed','Collected','In Progress','Ready for Delivery','Delivered','Cancelled'];
 const STATUS_COLORS={'New Request':['#eef1f0','#4a5652'],'Confirmed':['#e6f0fb','#2f5fa0'],'Collected':['#efe9fb','#5b3fa0'],
   'In Progress':['#fdf5e4','#8a6d1e'],'Ready for Delivery':['#e8f1ee','#2f6f63'],'Delivered':['#e6f4ec','#2f7d5b'],'Cancelled':['#fbecea','#c0483c']};
@@ -185,7 +195,7 @@ const store={
   get blocks(){ if(_blocksCache)return _blocksCache; try{return JSON.parse(localStorage.getItem('oriella_blocks')||'{"dates":[],"slots":{}}')}catch(e){return{dates:[],slots:{}}} },
   set blocks(v){ _blocksCache=v; localStorage.setItem('oriella_blocks',JSON.stringify(v)); if(SB.enabled)sbSaveBlocks(v).catch(e=>console.warn('Oriella: block save failed —',e.message)); }
 };
-const state={ service:null, date:null, slot:null, express:false };
+const state={ service:null, date:null, slot:null, express:false, sensProducts:false, noPerfume:false };
 let lastBooking=null, bookingsView='list', adminDayFilter=null, blockSelDate=null;
 let bkCalMonth=startOfMonth(new Date()), blkCalMonth=startOfMonth(new Date()), custCalMonth=startOfMonth(new Date());
 const TEXT_FIELDS=['fullName','email','phone','address','postcode','town','garments','notes'];
@@ -198,10 +208,11 @@ function fmtDate(d){ return d.toLocaleDateString(locale(),{day:'numeric',month:'
 function fmtFull(key,en){ return new Date(key+'T00:00:00').toLocaleDateString(en?'en-GB':locale(),{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
 function slotLabel(id){ return (SLOT_LABELS[curLang()]||SLOT_LABELS.en)[id]||id; }
 function enSlot(id){ return SLOT_LABELS.en[id]||id; }
-function slotObj(id){ return SLOTS.find(x=>x.id===id); }
+function slotObj(id){ return ALL_SLOTS.find(x=>x.id===id); }
 function svcName(id){ const s=SERVICES.find(x=>x.id===id); return s?L(s.nameKey):id; }
 function enSvc(id){ const s=SERVICES.find(x=>x.id===id); return s?OB_T.en[s.nameKey]:id; }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function sensStr(sp,np,en){ const d=en?OB_T.en:OB_T[curLang()]; const a=[]; if(sp)a.push(d.sens_products); if(np)a.push(d.sens_noperfume); return a.join(', '); }
 function val(id){ return ($('#'+id)?.value||'').trim(); }
 function startOfMonth(d){ return new Date(d.getFullYear(),d.getMonth(),1); }
 function addMonths(d,n){ return new Date(d.getFullYear(),d.getMonth()+n,1); }
@@ -210,8 +221,9 @@ function toast(msg,type){ const t=document.createElement('div');t.className='toa
 
 function isDateBlocked(k){ return store.blocks.dates.includes(k); }
 function isSlotBlocked(k,s){ if(isDateBlocked(k))return true;return (store.blocks.slots[k]||[]).includes(s); }
-function isSlotBooked(k,s){ return isSlotTaken(k,s); }
-function availableSlots(k){ return SLOTS.filter(s=>!isSlotBlocked(k,s.id)&&!isSlotBooked(k,s.id)); }
+function slotBookedCount(k,s){ const tc=_takenCache||(store.bookings.filter(b=>b.status!=='Cancelled').map(b=>({date:b.date,slot:b.slot}))); return tc.filter(t=>t.date===k&&t.slot===s).length; }
+function isSlotBooked(k,s){ return slotBookedCount(k,s) >= SLOT_CAPACITY; }
+function availableSlots(k){ return slotsForDate(k).filter(s=>!isSlotBlocked(k,s.id)&&!isSlotBooked(k,s.id)); }
 function availableDates(){ const out=[];const t=new Date();t.setHours(0,0,0,0);for(let i=1;i<=DAYS_AHEAD;i++){const d=new Date(t);d.setDate(d.getDate()+i);const k=dateKey(d);if(availableSlots(k).length)out.push({key:k,d});}return out; }
 
 /* ---------- translate static labels ---------- */
@@ -283,6 +295,7 @@ function renderSummary(){
   if(state.service)rows.push([L('s_service'),svcName(state.service)]);
   if(state.service==='wash-fold-iron'&&val('garments'))rows.push([L('s_garments'),val('garments')]);
   if(state.express)rows.push([L('s_express'),L('express_yes')]);
+  { const ss=sensStr(state.sensProducts,state.noPerfume,false); if(ss)rows.push([L('s_sensitive'),ss]); }
   if(state.date)rows.push([L('s_date'),fmtFull(state.date)]);
   if(state.slot)rows.push([L('s_slot'),slotLabel(state.slot)]);
   el.innerHTML=rows.length?rows.map(([k,v])=>`<div class="summary-row"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join(''):`<p class="summary-empty">${L('summary_empty')}</p>`;
@@ -303,6 +316,8 @@ function restoreDraft(){ let d;try{d=JSON.parse(localStorage.getItem(DRAFT_KEY))
   if(d.state){
     if(d.state.service){state.service=d.state.service;$('#garments-field').classList.toggle('ob-hidden',d.state.service!=='wash-fold-iron');renderServices();}
     if(d.state.express){state.express=true;$('#express').checked=true;$('#express-wrap').classList.add('selected');}
+    if(d.state.sensProducts){state.sensProducts=true;$('#sens-products').checked=true;$('#sens-products-wrap').classList.add('selected');}
+    if(d.state.noPerfume){state.noPerfume=true;$('#sens-perfume').checked=true;$('#sens-perfume-wrap').classList.add('selected');}
     if(d.state.date&&availableSlots(d.state.date).length){state.date=d.state.date;renderDates();renderSlots();
       if(d.state.slot&&availableSlots(d.state.date).some(s=>s.id===d.state.slot)){state.slot=d.state.slot;renderSlots();}}
   }
@@ -324,25 +339,25 @@ async function handleSubmit(e){
   const ref=makeRef();
   const b={ id:ref,createdAt:new Date().toISOString(),fullName:val('fullName'),email:val('email'),phone:val('phone'),
     address:val('address'),postcode:val('postcode'),town:val('town'),service:state.service,serviceLabel:enSvc(state.service),
-    garments:val('garments'),express:state.express,date:state.date,slot:state.slot,slotLabel:enSlot(state.slot),notes:val('notes'),status:'New Request' };
+    garments:val('garments'),express:state.express,sensProducts:state.sensProducts,noPerfume:state.noPerfume,date:state.date,slot:state.slot,slotLabel:enSlot(state.slot),notes:val('notes'),status:'New Request' };
   const all=store.bookings; all.push(b); store.bookings=all;
   if(_takenCache)_takenCache.push({date:b.date,slot:b.slot});
   try{ if(SB.enabled)await sbInsertBooking(b); }catch(err){ console.warn('Oriella: DB save failed (email still sent) —',err.message); }
-  submitToNetlify(b);
+  // (Supabase is the source of truth now; Netlify Forms backup removed)
   try{ await sendEmails(b); }catch(err){}
   clearDraft(); showConfirmation(b);
 }
 function submitToNetlify(b){
   const data={'form-name':'oriella-booking',fullName:b.fullName,email:b.email,phone:b.phone,address:b.address,postcode:b.postcode,town:b.town,
-    service:b.serviceLabel,garments:b.garments,express:b.express?'Yes (+20%)':'No',date:fmtFull(b.date,true),timeSlot:b.slotLabel,notes:b.notes,reference:b.id};
+    service:b.serviceLabel,garments:b.garments,express:b.express?'Yes (+20%)':'No',sensitive:sensStr(b.sensProducts,b.noPerfume,true)||'—',date:fmtFull(b.date,true),timeSlot:b.slotLabel,notes:b.notes,reference:b.id};
   const body=Object.keys(data).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(data[k])).join('&');
   fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}).catch(()=>{});
 }
 async function sendEmails(b){
   if(!EMAILJS.enabled||typeof emailjs==='undefined')return;
   const p={reference:b.id,fullName:b.fullName,email:b.email,phone:b.phone,address:`${b.address}, ${b.town}, ${b.postcode}`,
-    service:b.serviceLabel,garments:b.garments||'—',express:b.express?'Yes (+20%)':'No',date:fmtFull(b.date,true),timeSlot:b.slotLabel,
-    notes:b.notes||'—',to_email:b.email,admin_email:EMAILJS.adminEmail};
+    service:b.serviceLabel,garments:b.garments||'—',express:b.express?'Yes (+20%)':'No',sensitive:sensStr(b.sensProducts,b.noPerfume,true)||'—',date:fmtFull(b.date,true),timeSlot:b.slotLabel,
+    notes:b.notes||'—',to_email:b.email,admin_email:EMAILJS.adminEmail,reply_to:'info@oriella.ch',from_name:'Oriella'};
   await emailjs.send(EMAILJS.serviceId,EMAILJS.customerTemplate,p);
   await emailjs.send(EMAILJS.serviceId,EMAILJS.adminTemplate,p);
 }
@@ -359,6 +374,7 @@ function renderConfirmation(){
   const rows=[[L('s_service'),svcName(b.service)+(b.express?' + '+L('express_name')+' (+20%)':'')],
     [L('s_collection'),fmtFull(b.date)+', '+slotLabel(b.slot)],[L('s_address'),`${b.address}, ${b.town}, ${b.postcode}`]];
   if(b.garments)rows.splice(1,0,[L('s_garments'),b.garments]);
+  { const ss=sensStr(b.sensProducts,b.noPerfume,false); if(ss)rows.push([L('s_sensitive'),ss]); }
   $('#confirm-recap').innerHTML=rows.map(([k,v])=>`<div class="summary-row"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
   $('#ics-btn').onclick=()=>downloadICS(b);
 }
@@ -385,6 +401,7 @@ function renderAdminList(){
       <span class="pill" style="background:${bg};color:${fg}">${b.status}</span></div>
       <div class="detail">
         <div><span class="k">Service:</span> ${esc(b.serviceLabel)}${b.express?' + Express (+20%)':''}</div>
+        ${(b.sensProducts||b.noPerfume)?`<div style="grid-column:1/-1"><span class="k">Sensitive:</span> ${esc(sensStr(b.sensProducts,b.noPerfume,true))}</div>`:''}
         <div><span class="k">Collection:</span> ${fmtFull(b.date,true)}, ${esc(enSlot(b.slot))}</div>
         <div><span class="k">Phone:</span> <a href="tel:${esc(b.phone)}">${esc(b.phone)}</a></div>
         <div><span class="k">Email:</span> <a href="mailto:${esc(b.email)}">${esc(b.email)}</a></div>
@@ -434,11 +451,13 @@ function renderSlotManager(){
   const el=$('#block-slot-manager');if(!el)return;
   if(!blockSelDate){ el.innerHTML='<p class="empty-note">Select a date above to manage its availability.</p>';return; }
   const k=blockSelDate,whole=isDateBlocked(k);
+  const daySlots=slotsForDate(k);
   let html=`<div class="slot-manage"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:17px">${fmtFull(k,true)}</h3><button class="obtn tiny ${whole?'ghost':'danger'}" id="toggle-whole">${whole?'Unblock whole day':'Block whole day'}</button></div>`;
-  SLOTS.forEach(s=>{ const booked=isSlotBooked(k,s.id),blocked=whole||(store.blocks.slots[k]||[]).includes(s.id);let right,note;
-    if(booked){right=`<span class="slot-status" style="background:#eef1f0;color:#4a5652">Booked</span>`;note=' — <strong>booked</strong>';}
+  if(!daySlots.length){ html+='<p class="empty-note">No collection slots on this day (Sundays are closed).</p>'; }
+  daySlots.forEach(s=>{ const cnt=slotBookedCount(k,s.id),full=cnt>=SLOT_CAPACITY,blocked=whole||(store.blocks.slots[k]||[]).includes(s.id);let right,note;
+    if(full){right=`<span class="slot-status" style="background:#eef1f0;color:#4a5652">Full (${cnt}/${SLOT_CAPACITY})</span>`;note=' — <strong>full</strong>';}
     else if(blocked){right=`<button class="obtn tiny ghost" data-unblock="${s.id}" ${whole?'disabled':''}>Unblock</button>`;note=' — blocked';}
-    else{right=`<button class="obtn tiny danger" data-block="${s.id}">Block</button>`;note=' — available';}
+    else{right=`<button class="obtn tiny danger" data-block="${s.id}">Block</button>`;note=cnt>0?` — ${cnt}/${SLOT_CAPACITY} booked`:' — available';}
     html+=`<div class="slot-row"><span>${enSlot(s.id)}${note}</span>${right}</div>`; });
   html+='</div>'; el.innerHTML=html;
   const tw=$('#toggle-whole'); if(tw)tw.onclick=()=>{ if(whole)removeBlock(k,'ALL');else addWholeBlock(k);toast(whole?'Day unblocked.':'Day blocked.','ok');refreshBlockUI(); };
@@ -474,9 +493,12 @@ translateStatic(); renderServices(); renderDates(); renderSlots(); renderSummary
 
 TEXT_FIELDS.forEach(id=>{ const el=$('#'+id);el.addEventListener('input',()=>{if(el.closest('.field').classList.contains('invalid'))validateField(id);afterChange();});if(['fullName','email','phone','address','postcode','town'].includes(id))el.addEventListener('blur',()=>validateField(id)); });
 $('#express').addEventListener('change',e=>{ state.express=e.target.checked;$('#express-wrap').classList.toggle('selected',e.target.checked);afterChange(); });
+$('#sens-products')?.addEventListener('change',e=>{ state.sensProducts=e.target.checked;$('#sens-products-wrap').classList.toggle('selected',e.target.checked);afterChange(); });
+$('#sens-perfume')?.addEventListener('change',e=>{ state.noPerfume=e.target.checked;$('#sens-perfume-wrap').classList.toggle('selected',e.target.checked);afterChange(); });
 $('#booking-form').addEventListener('submit',handleSubmit);
-$('#new-booking-btn').addEventListener('click',()=>{ $('#confirm-view').classList.add('ob-hidden');$('#form-view').classList.remove('ob-hidden');state.service=state.date=state.slot=null;state.express=false;$('#booking-form').reset();$('#express-wrap').classList.remove('selected');$$('#ob-app .field').forEach(f=>f.classList.remove('ok','invalid'));renderServices();renderDates();renderSlots();renderSummary();updateProgress();document.getElementById('book').scrollIntoView({behavior:'smooth'}); });
-$('#clear-draft').addEventListener('click',()=>{ clearDraft();state.service=state.date=state.slot=null;state.express=false;$('#booking-form').reset();$('#express-wrap').classList.remove('selected');$('#draft-banner').style.display='none';renderServices();renderDates();renderSlots();renderSummary();updateProgress(); });
+function resetSensUI(){ state.express=state.sensProducts=state.noPerfume=false; $('#express-wrap').classList.remove('selected'); $('#sens-products-wrap')?.classList.remove('selected'); $('#sens-perfume-wrap')?.classList.remove('selected'); }
+$('#new-booking-btn').addEventListener('click',()=>{ $('#confirm-view').classList.add('ob-hidden');$('#form-view').classList.remove('ob-hidden');state.service=state.date=state.slot=null;$('#booking-form').reset();resetSensUI();$$('#ob-app .field').forEach(f=>f.classList.remove('ok','invalid'));renderServices();renderDates();renderSlots();renderSummary();updateProgress();document.getElementById('book').scrollIntoView({behavior:'smooth'}); });
+$('#clear-draft').addEventListener('click',()=>{ clearDraft();state.service=state.date=state.slot=null;$('#booking-form').reset();resetSensUI();$('#draft-banner').style.display='none';renderServices();renderDates();renderSlots();renderSummary();updateProgress(); });
 $('#staff-link').addEventListener('click',openAdmin);
 $('#admin-exit').addEventListener('click',showCustomer);
 $('#admin-export').addEventListener('click',exportCSV);
